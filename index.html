@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a0a2e">
+<title>Magic Vault</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0818;--bg2:#1a0f2e;--bg3:#241540;
+  --gold:#c9a84c;--gold2:#e8c96a;
+  --text:#e8e0f0;--text2:#b8a8d0;
+  --accent:#7b4fc9;--accent2:#9d6de8;
+  --red:#c94040;--green:#3a8c5a;
+  --border:rgba(201,168,76,.2);--border2:rgba(201,168,76,.4);
+  --card-bg:rgba(26,15,46,.95);--input-bg:rgba(13,8,24,.8);
+  --radius:8px;--radius-lg:12px;
+  --r-common:#aaa;--r-uncommon:#7fb8d4;--r-rare:#c9a84c;--r-mythic:#e8804a;--r-special:#b070d0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Crimson Pro',Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 10%,rgba(123,79,201,.15) 0%,transparent 50%),
+  radial-gradient(ellipse at 80% 90%,rgba(201,168,76,.08) 0%,transparent 50%);}
+/* HEADER */
+header{background:linear-gradient(180deg,rgba(13,8,24,.98),rgba(26,15,46,.95));
+  border-bottom:1px solid var(--border2);padding:0 1rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{font-family:'Cinzel',serif;font-size:1.25rem;font-weight:700;color:var(--gold);letter-spacing:.05em;display:flex;align-items:center;gap:8px;}
+.drive-status{font-size:.75rem;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;}
+.dot{width:7px;height:7px;border-radius:50%;background:#888;}
+.dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot.err{background:var(--red);}
+/* NAV — 5 tabs */
+nav{background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:99;}
+.nav-inner{max-width:960px;margin:0 auto;display:flex;}
+.nav-btn{flex:1;padding:.6rem .3rem;background:none;border:none;cursor:pointer;color:var(--text2);
+  font-family:'Cinzel',serif;font-size:.65rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  transition:color .2s,border-bottom .2s;border-bottom:2px solid transparent;white-space:nowrap;}
+.nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.nav-btn:hover:not(.active){color:var(--text);}
+/* MAIN */
+main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 5rem;}
+.section{display:none;}.section.active{display:block;}
+/* SECTION TITLES */
+.section-title{font-family:'Cinzel',serif;font-size:1.25rem;color:var(--gold);margin-bottom:.3rem;letter-spacing:.04em;}
+.section-sub{font-size:.85rem;color:var(--text2);margin-bottom:1.2rem;}
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px;margin-top:1rem;}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.85rem;
+  transition:border-color .2s,transform .15s;cursor:pointer;}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.card-name{font-family:'Cinzel',serif;font-size:.76rem;font-weight:600;color:var(--gold2);margin-bottom:4px;line-height:1.3;}
+.card-set{font-size:.7rem;color:var(--text2);margin-bottom:4px;}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.qty-badge{background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;font-size:.7rem;font-weight:600;display:flex;align-items:center;justify-content:center;}
+.foil-badge{font-size:.6rem;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:1px 5px;}
+.card-colors{display:flex;gap:3px;margin-top:4px;}
+.mana{width:14px;height:14px;border-radius:50%;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:700;}
+.mana-W{background:#f5f0d8;color:#555;}.mana-U{background:#3a6ea8;color:#fff;}
+.mana-B{background:#2a1a3a;color:#c8a8f0;border:1px solid #666;}
+.mana-R{background:#c03020;color:#fff;}.mana-G{background:#2a6a38;color:#fff;}.mana-C{background:#888;color:#fff;}
+/* RARITY */
+.rarity-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px;flex-shrink:0;}
+.r-common{background:var(--r-common);}.r-uncommon{background:var(--r-uncommon);}
+.r-rare{background:var(--r-rare);}.r-mythic{background:var(--r-mythic);}.r-special{background:var(--r-special);}
+.rarity-label{font-size:.67rem;}
+.rl-common{color:var(--r-common);}.rl-uncommon{color:var(--r-uncommon);}
+.rl-rare{color:var(--r-rare);}.rl-mythic{color:var(--r-mythic);}.rl-special{color:var(--r-special);}
+/* INPUTS */
+.search-row{display:flex;gap:8px;margin-bottom:1rem;align-items:center;}
+.search-input{flex:1;background:var(--input-bg);border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text);padding:.6rem .9rem;font-family:'Crimson Pro',serif;font-size:1rem;outline:none;transition:border-color .2s;}
+.search-input:focus{border-color:var(--gold);}
+.search-input::placeholder{color:var(--text2);}
+/* BUTTONS */
+.btn{background:linear-gradient(135deg,var(--accent),#5a2fa0);color:#fff;border:none;border-radius:var(--radius);
+  padding:.6rem 1.1rem;cursor:pointer;font-family:'Cinzel',serif;font-size:.75rem;font-weight:600;
+  letter-spacing:.05em;transition:opacity .2s,transform .15s;white-space:nowrap;}
+.btn:hover{opacity:.88;transform:translateY(-1px);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a07830);color:#1a0a2e;}
+.btn-green{background:linear-gradient(135deg,var(--green),#1f5c38);color:#fff;}
+.btn-teal{background:linear-gradient(135deg,#2a8c8c,#1a5c5c);color:#fff;}
+.btn-sm{padding:.4rem .8rem;font-size:.68rem;}
+.btn-danger{background:linear-gradient(135deg,var(--red),#8a2020);}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius);
+  padding:.55rem 1rem;cursor:pointer;font-family:'Cinzel',serif;font-size:.72rem;transition:border-color .2s,color .2s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+/* SEARCH RESULTS */
+.search-results{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem;}
+.search-result-item{padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;gap:8px;cursor:pointer;transition:background .15s;}
+.search-result-item:last-child{border-bottom:none;}
+.search-result-item:hover{background:var(--bg3);}
+.result-name{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold2);font-weight:600;}
+.result-set{font-size:.72rem;color:var(--text2);margin-top:2px;}
+/* SEARCH PAGE RESULT CARD */
+.search-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+  display:flex;gap:1rem;padding:1rem;margin-bottom:10px;align-items:flex-start;transition:border-color .2s;}
+.search-card:hover{border-color:var(--border2);}
+.search-card-img{width:80px;flex-shrink:0;border-radius:6px;border:1px solid var(--border2);}
+.search-card-img-ph{width:80px;height:112px;flex-shrink:0;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.search-card-info{flex:1;min-width:0;}
+.search-card-name{font-family:'Cinzel',serif;font-size:.9rem;font-weight:600;color:var(--gold2);margin-bottom:3px;}
+.search-card-meta{font-size:.75rem;color:var(--text2);margin-bottom:6px;line-height:1.5;}
+.search-card-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:1.5rem;
+  max-width:460px;width:100%;max-height:92vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold);margin-bottom:1rem;
+  border-bottom:1px solid var(--border);padding-bottom:.7rem;}
+.form-row{margin-bottom:.9rem;}
+.form-label{display:block;font-size:.78rem;color:var(--text2);margin-bottom:.3rem;font-family:'Cinzel',serif;letter-spacing:.04em;}
+.form-input,.form-select{width:100%;background:var(--input-bg);border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text);padding:.55rem .8rem;font-family:'Crimson Pro',serif;font-size:.95rem;outline:none;}
+.form-input:focus,.form-select:focus{border-color:var(--gold);}
+.form-select option{background:var(--bg2);}
+.form-row-inline{display:flex;gap:8px;}
+.form-row-inline .form-row{flex:1;}
+.modal-actions{display:flex;gap:8px;margin-top:1.2rem;justify-content:flex-end;}
+/* IMG */
+.card-img-preview{width:100%;max-width:200px;border-radius:8px;display:block;margin:0 auto 1rem;border:1px solid var(--border2);}
+.card-img-placeholder{width:100%;max-width:200px;height:140px;margin:0 auto 1rem;background:var(--bg3);
+  border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--text2);}
+.detail-with-img{display:flex;gap:1rem;align-items:flex-start;}
+.detail-img-col{flex-shrink:0;width:130px;}
+.detail-info-col{flex:1;min-width:0;}
+/* STATS */
+.stats-bar{display:flex;gap:10px;margin-bottom:1.2rem;flex-wrap:wrap;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .9rem;font-size:.78rem;color:var(--text2);}
+.stat strong{color:var(--gold2);font-size:.95rem;font-weight:600;}
+/* SET LIST */
+.set-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.2rem;
+  margin-bottom:10px;cursor:pointer;transition:border-color .2s,transform .15s;}
+.set-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.set-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.set-name{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold2);font-weight:600;}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));border-radius:3px;transition:width .5s;}
+/* SET DETAIL */
+.set-detail-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+.back-btn{background:none;border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius);
+  padding:.4rem .8rem;cursor:pointer;font-size:.75rem;font-family:'Cinzel',serif;transition:border-color .2s;white-space:nowrap;}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
+/* SET TABLE */
+.set-cards-table{width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-top:1rem;}
+.set-cards-row{display:grid;grid-template-columns:36px 1fr 90px 72px 52px 80px;
+  padding:.48rem .9rem;border-bottom:1px solid var(--border);align-items:center;font-size:.84rem;transition:background .12s;}
+.set-cards-row:last-child{border-bottom:none;}
+.set-cards-row:hover{background:var(--bg3);}
+.set-table-header{display:grid;grid-template-columns:36px 1fr 90px 72px 52px 80px;
+  padding:.45rem .9rem;background:var(--bg3);border-bottom:1px solid var(--border2);
+  font-family:'Cinzel',serif;font-size:.63rem;color:var(--text2);letter-spacing:.05em;text-transform:uppercase;}
+.set-table-header span{display:flex;align-items:center;gap:3px;user-select:none;cursor:pointer;}
+.set-table-header span:hover{color:var(--gold);}
+.sort-active{color:var(--gold)!important;}
+.set-col-num{font-size:.7rem;color:var(--text2);font-family:monospace;}
+.set-col-rarity{display:flex;align-items:center;gap:3px;}
+.set-col-owned{font-size:.73rem;text-align:center;}
+.owned-yes{color:var(--green);font-weight:600;}
+.owned-no{color:var(--red);}
+.set-owned-coll{font-size:.68rem;color:var(--accent2);}
+.set-owned-set{font-size:.68rem;color:var(--green);}
+.set-col-qty{font-size:.73rem;color:var(--text2);text-align:right;}
+/* ADD TO SET BUTTON in table */
+.btn-add-set{background:none;border:1px solid var(--green);color:var(--green);border-radius:4px;
+  padding:2px 7px;cursor:pointer;font-size:.65rem;font-family:'Cinzel',serif;white-space:nowrap;transition:background .15s,color .15s;}
+.btn-add-set:hover{background:var(--green);color:#fff;}
+.btn-add-set.in-set{border-color:var(--accent2);color:var(--accent2);}
+.btn-add-set.in-set:hover{background:var(--accent2);color:#fff;}
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1rem;}
+/* FILTER CHIPS */
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1rem;}
+.filter-chip{background:none;border:1px solid var(--border2);color:var(--text2);border-radius:20px;
+  padding:.28rem .85rem;cursor:pointer;font-size:.73rem;font-family:'Cinzel',serif;transition:all .2s;}
+.filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+/* SORT SELECT */
+.sort-select{background:var(--input-bg);border:1px solid var(--border2);border-radius:var(--radius);
+  color:var(--text);padding:.32rem .65rem;font-family:'Cinzel',serif;font-size:.68rem;outline:none;cursor:pointer;}
+.sort-select option{background:var(--bg2);}
+/* DECKS */
+.deck-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.2rem;margin-bottom:10px;cursor:pointer;transition:border-color .2s,transform .15s;}
+.deck-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.deck-header{display:flex;justify-content:space-between;align-items:flex-start;}
+.deck-name{font-family:'Cinzel',serif;font-size:.92rem;color:var(--gold2);font-weight:600;}
+.deck-format{font-size:.63rem;border:1px solid var(--accent);color:var(--accent2);border-radius:4px;padding:2px 7px;font-family:'Cinzel',serif;}
+.deck-stats{display:flex;gap:10px;margin-top:6px;}
+.deck-stat{font-size:.73rem;color:var(--text2);}
+.deck-detail-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+.deck-card-item{display:flex;align-items:center;justify-content:space-between;padding:.52rem .9rem;border-bottom:1px solid var(--border);font-size:.88rem;}
+.deck-card-item:last-child{border-bottom:none;}
+.deck-card-name{color:var(--text);}
+.deck-card-owned{font-size:.73rem;color:var(--green);}
+.deck-card-missing{font-size:.73rem;color:var(--red);}
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text2);}
+.empty-icon{font-size:2.5rem;margin-bottom:.8rem;opacity:.4;}
+.empty p{font-size:.9rem;}
+.loading-state{text-align:center;padding:2rem;color:var(--text2);font-size:.9rem;}
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--bg2);
+  border:1px solid var(--border2);color:var(--text);padding:.65rem 1.3rem;border-radius:var(--radius);
+  font-size:.83rem;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.ok{border-color:var(--green);color:#7fe09a;}
+.toast.err{border-color:var(--red);color:#f08080;}
+/* SPINNER */
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* TUTORIAL */
+.tutorial-step{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem;margin-bottom:10px;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Cinzel',serif;font-size:.75rem;font-weight:700;margin-right:8px;flex-shrink:0;float:left;margin-bottom:4px;}
+.step-title{font-family:'Cinzel',serif;font-size:.88rem;color:var(--gold2);margin-bottom:.5rem;}
+.step-body{font-size:.9rem;line-height:1.7;color:var(--text2);clear:both;}
+.step-body strong{color:var(--text);}
+.step-body code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:.8rem;color:var(--gold2);}
+.step-body ol{padding-left:1.3rem;margin-top:.4rem;}
+.step-body ol li{margin-bottom:.3rem;}
+.step-body a{color:var(--accent2);}
+.tip-box{background:rgba(123,79,201,.12);border:1px solid rgba(123,79,201,.3);border-radius:var(--radius);padding:.75rem 1rem;margin-top:.75rem;font-size:.83rem;color:var(--text2);}
+.tip-box strong{color:var(--accent2);}
+/* BADGE SET-ONLY */
+.badge-setonly{font-size:.6rem;background:rgba(123,79,201,.2);border:1px solid var(--accent2);
+  color:var(--accent2);border-radius:4px;padding:1px 5px;white-space:nowrap;}
+/* LEGEND */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:.8rem;font-size:.72rem;color:var(--text2);}
+.legend span{display:flex;align-items:center;gap:4px;}
+@media(max-width:580px){
+  .set-cards-row,.set-table-header{grid-template-columns:28px 1fr 70px 50px 70px;}
+  .set-cards-row>*:nth-child(4),.set-table-header>*:nth-child(4){display:none;}
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+  .logo{font-size:1.05rem;}
+  .detail-with-img{flex-direction:column;}
+  .detail-img-col{width:100%;text-align:center;}
+  .search-card-img,.search-card-img-ph{width:64px;}
+  .search-card-img-ph{height:90px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo"><span style="font-size:1.4rem">⬡</span> Magic Vault</div>
+    <div class="drive-status" onclick="connectDrive()">
+      <div class="dot" id="drive-dot"></div>
+      <span id="drive-label">Connetti Drive</span>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active"  onclick="showSection('search',this)">🔍 Ricerca</button>
+    <button class="nav-btn"         onclick="showSection('collection',this)">🃏 Collezione</button>
+    <button class="nav-btn"         onclick="showSection('sets',this)">📦 Set</button>
+    <button class="nav-btn"         onclick="showSection('decks',this)">⚔️ Mazzi</button>
+    <button class="nav-btn"         onclick="showSection('tutorial',this)">📖 Guida</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════
+     TAB 1 — RICERCA
+════════════════════════════════════════ -->
+<div class="section active" id="section-search">
+  <div class="section-title">Ricerca Carte</div>
+  <div class="section-sub">Cerca su Scryfall e aggiungi alla collezione o a un set specifico</div>
+
+  <div class="search-row">
+    <input class="search-input" id="global-search" type="text"
+      placeholder="Nome carta... (es: Black Lotus, Ragavan)"
+      onkeydown="if(event.key==='Enter')globalSearch()">
+    <button class="btn" onclick="globalSearch()">
+      <span id="gs-spinner" style="display:none"><span class="spinner"></span></span>
+      <span id="gs-label">Cerca</span>
+    </button>
+  </div>
+
+  <div id="global-search-results"></div>
+
+  <div class="empty" id="search-empty" style="display:none">
+    <div class="empty-icon">🔍</div>
+    <p>Nessuna carta trovata.<br>Prova un altro nome.</p>
+  </div>
+  <div id="search-placeholder" style="text-align:center;padding:3rem 1rem;color:var(--text2);opacity:.5">
+    <div style="font-size:2.5rem;margin-bottom:.8rem">✦</div>
+    <p style="font-size:.9rem">Inserisci il nome di una carta per iniziare</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 2 — COLLEZIONE
+════════════════════════════════════════ -->
+<div class="section" id="section-collection">
+  <div class="section-title">La mia Collezione</div>
+  <div class="section-sub">Carte aggiunte manualmente — clicca una carta per modificarla</div>
+
+  <div class="filter-row" id="color-filter">
+    <button class="filter-chip active" onclick="setColorFilter('all',this)">Tutti</button>
+    <button class="filter-chip" onclick="setColorFilter('W',this)">⬜ Bianco</button>
+    <button class="filter-chip" onclick="setColorFilter('U',this)">🟦 Blu</button>
+    <button class="filter-chip" onclick="setColorFilter('B',this)">⬛ Nero</button>
+    <button class="filter-chip" onclick="setColorFilter('R',this)">🟥 Rosso</button>
+    <button class="filter-chip" onclick="setColorFilter('G',this)">🟩 Verde</button>
+    <button class="filter-chip" onclick="setColorFilter('multi',this)">✦ Multi</button>
+  </div>
+
+  <div class="stats-bar" id="collection-stats"></div>
+  <div class="cards-grid" id="collection-grid"></div>
+  <div class="empty" id="collection-empty" style="display:none">
+    <div class="empty-icon">🃏</div>
+    <p>Nessuna carta in collezione.<br>Vai in <strong>Ricerca</strong> per aggiungere carte!</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 3 — SET
+════════════════════════════════════════ -->
+<div class="section" id="section-sets">
+
+  <!-- Lista set -->
+  <div id="sets-list-view">
+    <div class="section-title">Set & Espansioni</div>
+    <div class="section-sub">Tieni traccia delle carte per ogni espansione — separatamente dalla collezione</div>
+    <div class="search-row">
+      <input class="search-input" id="set-search-input" type="text"
+        placeholder="Cerca un set... (es: Duskmourn, MH3)"
+        onkeydown="if(event.key==='Enter')searchSets()">
+      <button class="btn" onclick="searchSets()">
+        <span id="set-search-spinner" style="display:none"><span class="spinner"></span></span>
+        <span id="set-search-label">Cerca</span>
+      </button>
+    </div>
+    <div id="set-results-box" class="search-results" style="display:none"></div>
+    <div id="sets-list"></div>
+    <div class="empty" id="sets-empty" style="display:none">
+      <div class="empty-icon">📦</div>
+      <p>Nessun set tracciato ancora.<br>Cerca un set sopra per iniziare!</p>
+    </div>
+  </div>
+
+  <!-- Dettaglio set -->
+  <div id="set-detail-view" style="display:none">
+    <div class="set-detail-header">
+      <button class="back-btn" onclick="closeSetDetail()">← Set</button>
+      <div style="flex:1">
+        <div class="section-title" id="set-detail-name"></div>
+        <div style="font-size:.75rem;color:var(--text2)" id="set-detail-sub"></div>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="set-detail-stats"></div>
+
+    <!-- legenda ownership -->
+    <div class="legend">
+      <span><span class="owned-yes">✓</span> In collezione generale</span>
+      <span><span class="set-owned-coll">◉</span> Solo nel set</span>
+      <span><span class="owned-no">✗</span> Mancante</span>
+    </div>
+
+    <div class="toolbar no-print">
+      <div class="filter-row" style="margin:0;gap:6px" id="set-filter-row">
+        <button class="filter-chip active" onclick="setSetFilter('all',this)">Tutte</button>
+        <button class="filter-chip" onclick="setSetFilter('missing',this)">❌ Mancanti</button>
+        <button class="filter-chip" onclick="setSetFilter('owned',this)">✅ Possedute</button>
+        <button class="filter-chip" onclick="setSetFilter('setonly',this)">◉ Solo Set</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-left:auto;flex-wrap:wrap">
+        <select class="sort-select" id="set-sort-select" onchange="setSetSort(this.value)">
+          <option value="number">Ordina: #</option>
+          <option value="name">Ordina: Nome</option>
+          <option value="rarity">Ordina: Rarità</option>
+        </select>
+        <button class="btn btn-green btn-sm" onclick="exportSet('txt')">📄 TXT</button>
+        <button class="btn btn-gold btn-sm"  onclick="exportSet('pdf')">🖨 PDF</button>
+      </div>
+    </div>
+
+    <div id="set-detail-loading" class="loading-state" style="display:none">
+      <span class="spinner"></span> Caricamento carte...
+    </div>
+    <div id="set-detail-content"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 4 — MAZZI
+════════════════════════════════════════ -->
+<div class="section" id="section-decks">
+  <div id="decks-list-view">
+    <div class="section-title">I miei Mazzi</div>
+    <div class="section-sub">Crea e gestisci i tuoi mazzi</div>
+    <div style="margin-bottom:1rem"><button class="btn btn-gold" onclick="openNewDeckModal()">+ Nuovo Mazzo</button></div>
+    <div id="decks-list"></div>
+    <div class="empty" id="decks-empty" style="display:none">
+      <div class="empty-icon">⚔️</div>
+      <p>Nessun mazzo creato.<br>Clicca "+ Nuovo Mazzo" per iniziare!</p>
+    </div>
+  </div>
+  <div id="deck-detail-view" style="display:none">
+    <div class="deck-detail-header">
+      <button class="back-btn" onclick="closeDeckDetail()">← Mazzi</button>
+      <div style="flex:1">
+        <div class="section-title" id="deck-detail-name"></div>
+        <div style="font-size:.75rem;color:var(--text2)" id="deck-detail-format"></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-row" style="flex:1;margin:0">
+        <input class="search-input" id="deck-card-search" type="text"
+          placeholder="Cerca carta da aggiungere..."
+          onkeydown="if(event.key==='Enter')searchDeckCard()">
+        <button class="btn" onclick="searchDeckCard()">Cerca</button>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="exportDeck('txt')">📄 TXT</button>
+      <button class="btn btn-gold btn-sm"  onclick="exportDeck('pdf')">🖨 PDF</button>
+    </div>
+    <div id="deck-card-results" class="search-results" style="display:none"></div>
+    <div id="deck-cards-container"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TAB 5 — GUIDA
+════════════════════════════════════════ -->
+<div class="section" id="section-tutorial">
+  <div class="section-title">Guida all'installazione</div>
+  <div class="section-sub">Come configurare Magic Vault sul tuo telefono e PC</div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">1</span> Struttura dell'app</div>
+    <div class="step-body">Magic Vault ha ora <strong>5 sezioni</strong> separate:
+      <ol>
+        <li><strong>Ricerca</strong> — cerca qualsiasi carta su Scryfall e scegli dove aggiungerla</li>
+        <li><strong>Collezione</strong> — il tuo inventario personale di carte fisiche</li>
+        <li><strong>Set</strong> — traccia le carte di ogni espansione separatamente (es. "ho questa carta nel booster del set X ma non in collezione")</li>
+        <li><strong>Mazzi</strong> — lista dei mazzi costruiti con verifica delle carte mancanti</li>
+        <li><strong>Guida</strong> — questa pagina</li>
+      </ol>
+      <div class="tip-box"><strong>Collezione vs Set:</strong> Puoi tenere separate le carte "sfuse" in collezione dalle carte che hai aperto nei booster di un set specifico. Una carta può essere presente in entrambi, solo in uno, o in nessuno.</div>
+    </div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">2</span> Come aggiungere carte</div>
+    <div class="step-body">Dalla sezione <strong>Ricerca</strong>, cerca la carta e per ogni risultato hai tre pulsanti:
+      <ol>
+        <li><strong>+ Collezione</strong> — aggiunge la carta alla tua collezione generale</li>
+        <li><strong>+ Set</strong> — aggiunge la carta al set/espansione di appartenenza (inventario separato)</li>
+        <li><strong>Dettagli</strong> — apre il pannello completo con anteprima immagine, scelta edizione, condizione ecc.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">3</span> Google Drive — struttura cartelle</div>
+    <div class="step-body">I dati vengono salvati in <code>MagicVault/</code> su Google Drive:
+      <ol>
+        <li><code>collection.json</code> — collezione generale</li>
+        <li><code>sets.json</code> — set tracciati + inventario carte per set</li>
+        <li><code>decks.json</code> — mazzi</li>
+      </ol>
+      <div class="tip-box"><strong>Automatico:</strong> la cartella viene creata al primo salvataggio.</div>
+    </div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">4</span> Connetti Google Drive</div>
+    <div class="step-body"><ol>
+      <li>Apri il file in <strong>Chrome o Edge</strong></li>
+      <li>Clicca <strong>"Connetti Drive"</strong> in alto a destra</li>
+      <li>Accedi con Google — pallino verde ✅ = connesso</li>
+    </ol></div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">5</span> Installazione Android</div>
+    <div class="step-body"><ol>
+      <li>Apri il file in <strong>Chrome su Android</strong></li>
+      <li>Menu tre puntini → <strong>Aggiungi alla schermata Home</strong></li>
+      <li>Appare come app!</li>
+    </ol></div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">6</span> Installazione PC</div>
+    <div class="step-body"><ol>
+      <li>Apri in Chrome/Edge → icona <strong>⊕ Installa</strong> nella barra indirizzi</li>
+      <li>Oppure Edge: menu → App → Installa sito come app</li>
+    </ol></div>
+  </div>
+
+  <div class="tutorial-step">
+    <div class="step-title"><span class="step-num">7</span> Client ID Google (richiesto per Drive)</div>
+    <div class="step-body"><ol>
+      <li>Vai su <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></li>
+      <li>Nuovo progetto → <strong>Magic Vault</strong></li>
+      <li>API e Servizi → Libreria → abilita <strong>Google Drive API</strong></li>
+      <li>Credenziali → Crea → ID client OAuth 2.0 → Applicazione web</li>
+      <li>Aggiungi il tuo URL in "URI JavaScript autorizzati"</li>
+      <li>Copia il Client ID:</li>
+    </ol>
+    <div style="margin-top:.9rem;display:flex;gap:8px;align-items:center">
+      <input class="form-input" id="client-id-input" type="text" placeholder="Incolla il tuo Client ID Google..." style="font-size:.82rem">
+      <button class="btn btn-gold btn-sm" onclick="saveClientId()">Salva</button>
+    </div></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══ MODAL: AGGIUNGI CARTA (dettaglio completo) ═══ -->
+<div class="modal-overlay" id="add-card-modal">
+  <div class="modal">
+    <div class="modal-title" id="add-modal-title">Aggiungi carta</div>
+    <div style="text-align:center;margin-bottom:.8rem">
+      <div class="card-img-placeholder" id="add-img-ph"><span class="spinner"></span></div>
+      <img id="add-card-img" class="card-img-preview" style="display:none" alt="">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Carta</label>
+      <input class="form-input" id="modal-card-name" type="text" readonly>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row">
+        <label class="form-label">Quantità</label>
+        <input class="form-input" id="modal-qty" type="number" min="1" max="99" value="1">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Condizione</label>
+        <select class="form-select" id="modal-condition">
+          <option>NM</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Edizione <span style="font-size:.68rem;color:var(--text2)">(tutte le ristampe)</span></label>
+      <select class="form-select" id="modal-edition-select" onchange="onEditionChange(this)">
+        <option>Caricamento...</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Aggiungi a</label>
+      <select class="form-select" id="modal-dest">
+        <option value="collection">Collezione generale</option>
+        <option value="set">Solo inventario Set</option>
+        <option value="both">Entrambi</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Lingua</label>
+      <select class="form-select" id="modal-lang">
+        <option value="it">Italiano</option><option value="en">Inglese</option><option value="other">Altra</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="modal-foil" style="width:auto">
+        <span class="form-label" style="margin:0">Foil ✨</span>
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('add-card-modal')">Annulla</button>
+      <button class="btn btn-gold" onclick="confirmAddCard()">Aggiungi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: MODIFICA CARTA ═══ -->
+<div class="modal-overlay" id="edit-card-modal">
+  <div class="modal">
+    <div class="modal-title" id="edit-modal-title">Modifica carta</div>
+    <div class="detail-with-img">
+      <div class="detail-img-col">
+        <div style="width:130px;height:90px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center" id="edit-img-ph"><span class="spinner"></span></div>
+        <img id="edit-card-img" style="width:130px;border-radius:8px;border:1px solid var(--border2);display:none" alt="">
+      </div>
+      <div class="detail-info-col">
+        <div class="form-row">
+          <label class="form-label">Quantità</label>
+          <input class="form-input" id="edit-qty" type="number" min="1" max="99">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Condizione</label>
+          <select class="form-select" id="edit-condition">
+            <option>NM</option><option>LP</option><option>MP</option><option>HP</option><option>DMG</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Edizione</label>
+      <select class="form-select" id="edit-edition-select" onchange="onEditEditionChange(this)">
+        <option>Caricamento...</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Lingua</label>
+      <select class="form-select" id="edit-lang">
+        <option value="it">Italiano</option><option value="en">Inglese</option><option value="other">Altra</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="edit-foil" style="width:auto">
+        <span class="form-label" style="margin:0">Foil ✨</span>
+      </label>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" onclick="removeCard()">Rimuovi</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" onclick="closeModal('edit-card-modal')">Annulla</button>
+        <button class="btn btn-gold" onclick="saveEditCard()">Salva</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: AGGIUNGI/MODIFICA CARTA NEL SET ═══ -->
+<div class="modal-overlay" id="set-add-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title" id="set-add-modal-title">Aggiungi al set</div>
+    <div class="form-row">
+      <label class="form-label">Carta</label>
+      <input class="form-input" id="set-add-card-name" type="text" readonly>
+    </div>
+    <div class="form-row-inline">
+      <div class="form-row">
+        <label class="form-label">Quantità</label>
+        <input class="form-input" id="set-add-qty" type="number" min="1" max="99" value="1">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Anche in coll.?</label>
+        <select class="form-select" id="set-add-dest">
+          <option value="set">Solo set</option>
+          <option value="both">Set + Collezione</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button id="set-add-remove-btn" class="btn btn-danger btn-sm" onclick="removeSetCard()" style="display:none">Rimuovi</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-ghost" onclick="closeModal('set-add-modal')">Annulla</button>
+        <button id="set-add-confirm-btn" class="btn btn-gold" onclick="confirmSetAdd()">Aggiungi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: NUOVO MAZZO ═══ -->
+<div class="modal-overlay" id="new-deck-modal">
+  <div class="modal">
+    <div class="modal-title">Nuovo Mazzo</div>
+    <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="deck-name-input" type="text" placeholder="es: Burn Rosso"></div>
+    <div class="form-row"><label class="form-label">Formato</label>
+      <select class="form-select" id="deck-format-input">
+        <option>Standard</option><option>Pioneer</option><option>Modern</option><option>Legacy</option>
+        <option>Vintage</option><option>Commander</option><option>Pauper</option><option>Draft</option><option>Casual</option>
+      </select></div>
+    <div class="form-row"><label class="form-label">Note</label><input class="form-input" id="deck-notes-input" type="text" placeholder="Descrizione breve..."></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('new-deck-modal')">Annulla</button>
+      <button class="btn btn-gold" onclick="confirmNewDeck()">Crea</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let collection = {};   // id → {name,set,set_code,colors,type,rarity,img,qty,condition,foil,lang}
+let sets       = {};   // setCode → {name,total,code, owned:{cardId:{name,qty,rarity,...}}}
+let decks      = {};   // deckId → {name,format,notes,cards:{cardId:{name,set,colors,img,rarity,qty}}}
+
+let currentDeck = null, currentSet = null;
+let currentSetCards = null;   // cache Scryfall cards for current set
+let setCardFilter = 'all', setSort = 'number';
+
+let pendingCard = null, pendingPrints = [];
+let editCardId = null, editPrints = [];
+let setAddCard = null;   // card being added to set (quick modal)
+let activeColorFilter = 'all';
+
+let GOOGLE_CLIENT_ID = localStorage.getItem('magic_client_id') || '';
+let driveConnected = false, gapiLoaded = false;
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadLocal();
+  renderCollection();
+  renderSets();
+  renderDecks();
+  if (GOOGLE_CLIENT_ID) {
+    document.getElementById('client-id-input').value = GOOGLE_CLIENT_ID;
+    initGapi();
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  LOCAL STORAGE
+// ═══════════════════════════════════════════════
+function loadLocal() {
+  try {
+    collection = JSON.parse(localStorage.getItem('magic_collection') || '{}');
+    sets       = JSON.parse(localStorage.getItem('magic_sets')       || '{}');
+    decks      = JSON.parse(localStorage.getItem('magic_decks')      || '{}');
+  } catch(e) { collection={}; sets={}; decks={}; }
+}
+function saveLocal() {
+  localStorage.setItem('magic_collection', JSON.stringify(collection));
+  localStorage.setItem('magic_sets',       JSON.stringify(sets));
+  localStorage.setItem('magic_decks',      JSON.stringify(decks));
+}
+function saveAll() {
+  saveLocal();
+  saveToDrive('collection.json', collection);
+  saveToDrive('sets.json', sets);
+  saveToDrive('decks.json', decks);
+}
+
+// ═══════════════════════════════════════════════
+//  GOOGLE DRIVE
+// ═══════════════════════════════════════════════
+function saveClientId() {
+  GOOGLE_CLIENT_ID = document.getElementById('client-id-input').value.trim();
+  localStorage.setItem('magic_client_id', GOOGLE_CLIENT_ID);
+  if (GOOGLE_CLIENT_ID) initGapi();
+  showToast('Client ID salvato!', 'ok');
+}
+function initGapi() {
+  const s = document.createElement('script');
+  s.src = 'https://apis.google.com/js/api.js';
+  s.onload = () => gapi.load('client:auth2', () => {
+    gapi.client.init({
+      clientId: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+    }).then(() => { gapiLoaded = true; if (gapi.auth2.getAuthInstance().isSignedIn.get()) setDriveStatus(true); });
+  });
+  document.head.appendChild(s);
+}
+function connectDrive() {
+  if (!GOOGLE_CLIENT_ID) { showSection('tutorial', document.querySelectorAll('.nav-btn')[4]); showToast('Prima inserisci il Client ID (Guida passo 7)', 'err'); return; }
+  if (!gapiLoaded) { showToast('Inizializzazione...', ''); return; }
+  gapi.auth2.getAuthInstance().signIn()
+    .then(() => { setDriveStatus(true); showToast('Drive connesso!', 'ok'); })
+    .catch(() => showToast('Errore connessione Drive', 'err'));
+}
+function setDriveStatus(ok) {
+  driveConnected = ok;
+  document.getElementById('drive-dot').className = 'dot ' + (ok ? 'ok' : 'err');
+  document.getElementById('drive-label').textContent = ok ? 'Drive connesso' : 'Connetti Drive';
+}
+async function saveToDrive(filename, data) {
+  if (!driveConnected) return;
+  try {
+    const folderId = await getOrCreateFolder('MagicVault');
+    const fileId   = await findDriveFile(filename, folderId);
+    const content  = JSON.stringify(data, null, 2);
+    const token    = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
+    if (fileId) {
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        method:'PATCH', headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}, body:content });
+    } else {
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify({name:filename,parents:[folderId]})],{type:'application/json'}));
+      form.append('file', new Blob([content],{type:'application/json'}));
+      await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{Authorization:'Bearer '+token},body:form});
+    }
+  } catch(e) { console.warn('Drive error',e); }
+}
+async function getOrCreateFolder(name) {
+  const res = await gapi.client.drive.files.list({q:`name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,fields:'files(id)'});
+  if (res.result.files.length) return res.result.files[0].id;
+  const f = await gapi.client.drive.files.create({resource:{name,mimeType:'application/vnd.google-apps.folder'},fields:'id'});
+  return f.result.id;
+}
+async function findDriveFile(name, parentId) {
+  const res = await gapi.client.drive.files.list({q:`name='${name}' and '${parentId}' in parents and trashed=false`,fields:'files(id)'});
+  return res.result.files.length ? res.result.files[0].id : null;
+}
+
+// ═══════════════════════════════════════════════
+//  SCRYFALL
+// ═══════════════════════════════════════════════
+async function sfSearch(query) {
+  try { const r = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&unique=prints&order=released`); if(!r.ok)return[]; return(await r.json()).data||[]; } catch(e){return[];}
+}
+async function sfPrints(cardName) {
+  try { const r = await fetch(`https://api.scryfall.com/cards/search?q=!"${encodeURIComponent(cardName)}"&unique=prints&order=released`); if(!r.ok)return[]; return(await r.json()).data||[]; } catch(e){return[];}
+}
+async function sfSets(query) {
+  try { const r = await fetch('https://api.scryfall.com/sets'); if(!r.ok)return[]; return((await r.json()).data||[]).filter(s=>s.name.toLowerCase().includes(query.toLowerCase())||s.code.toLowerCase().includes(query.toLowerCase())).slice(0,8); } catch(e){return[];}
+}
+async function sfSetCards(setCode) {
+  let cards=[], url=`https://api.scryfall.com/cards/search?q=set:${setCode}&unique=prints&order=collector_number`;
+  while(url){ const r=await fetch(url); if(!r.ok)break; const d=await r.json(); cards=cards.concat(d.data||[]); url=d.has_more?d.next_page:null; }
+  return cards;
+}
+function cardImg(c){ return c.image_uris?c.image_uris.normal:(c.card_faces&&c.card_faces[0].image_uris?c.card_faces[0].image_uris.normal:''); }
+
+// ═══════════════════════════════════════════════
+//  TAB 1 — RICERCA GLOBALE
+// ═══════════════════════════════════════════════
+async function globalSearch() {
+  const q = document.getElementById('global-search').value.trim();
+  if (!q) return;
+  document.getElementById('gs-spinner').style.display=''; document.getElementById('gs-label').style.display='none';
+  document.getElementById('search-placeholder').style.display='none';
+  document.getElementById('search-empty').style.display='none';
+  const results = await sfSearch(q);
+  document.getElementById('gs-spinner').style.display='none'; document.getElementById('gs-label').style.display='';
+
+  if (!results.length) { document.getElementById('search-empty').style.display='block'; document.getElementById('global-search-results').innerHTML=''; return; }
+
+  // Raggruppa per nome carta (mostra prima stampa, indica # edizioni)
+  const byName = {};
+  results.forEach(c => { if (!byName[c.name]) byName[c.name] = []; byName[c.name].push(c); });
+
+  document.getElementById('global-search-results').innerHTML = Object.entries(byName).map(([name, prints]) => {
+    const c = prints[0];
+    const img = cardImg(c);
+    const inColl = Object.values(collection).some(x => x.name.toLowerCase() === name.toLowerCase());
+    const inSet  = Object.values(sets).some(s => s.owned && Object.values(s.owned).some(x => x.name.toLowerCase() === name.toLowerCase()));
+    const cardDataStr = JSON.stringify({id:c.id,name:c.name,set:c.set_name,set_code:c.set,
+      colors:(c.colors||c.color_identity||[]).join(''),type:c.type_line||'',rarity:c.rarity||'',img}).replace(/"/g,'&quot;');
+    return `<div class="search-card">
+      ${img ? `<img class="search-card-img" src="${img}" alt="${c.name}" loading="lazy">` : `<div class="search-card-img-ph">🃏</div>`}
+      <div class="search-card-info">
+        <div class="search-card-name">${c.name}</div>
+        <div class="search-card-meta">
+          <span class="rarity-dot ${rarityClass(c.rarity)}"></span>
+          <span class="rarity-label ${rarityLabelClass(c.rarity)}">${rarityLabel(c.rarity)}</span>
+          &nbsp;·&nbsp;${c.set_name}&nbsp;·&nbsp;${c.type_line||''}
+          ${prints.length>1?`&nbsp;·&nbsp;<span style="color:var(--accent2)">${prints.length} edizioni</span>`:''}
+        </div>
+        <div style="font-size:.72rem;margin-bottom:4px">
+          ${inColl?'<span style="color:var(--green)">✓ In collezione</span>&nbsp;':''}
+          ${inSet?'<span style="color:var(--accent2)">◉ In un set</span>':''}
+        </div>
+        <div class="search-card-actions">
+          <button class="btn btn-gold btn-sm" onclick="openAddModal(${cardDataStr},'collection')">+ Collezione</button>
+          <button class="btn btn-teal btn-sm" onclick="openAddModal(${cardDataStr},'set')">+ Set</button>
+          <button class="btn-ghost btn-sm" style="padding:.35rem .7rem;font-size:.65rem" onclick="openAddModal(${cardDataStr},'ask')">Dettagli</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  MODAL AGGIUNGI CARTA
+// ═══════════════════════════════════════════════
+async function openAddModal(card, destHint) {
+  pendingCard = card; pendingPrints = [];
+  document.getElementById('modal-card-name').value = card.name;
+  document.getElementById('modal-qty').value = 1;
+  document.getElementById('modal-foil').checked = false;
+  document.getElementById('modal-condition').value = 'NM';
+  document.getElementById('modal-lang').value = 'en';
+  document.getElementById('add-modal-title').textContent = card.name;
+  // imposta destinazione suggerita
+  const destSel = document.getElementById('modal-dest');
+  destSel.value = destHint === 'collection' ? 'collection' : destHint === 'set' ? 'set' : 'collection';
+  // immagine
+  const img = document.getElementById('add-card-img'), ph = document.getElementById('add-img-ph');
+  img.style.display='none'; ph.style.display='flex'; ph.innerHTML='<span class="spinner"></span>';
+  if (card.img) { img.onload=()=>{ph.style.display='none';img.style.display='block';}; img.onerror=()=>{ph.innerHTML='🃏';}; img.src=card.img; }
+  else ph.innerHTML='🃏';
+  // dropdown edizioni
+  const sel = document.getElementById('modal-edition-select');
+  sel.innerHTML='<option>Caricamento edizioni...</option>';
+  document.getElementById('add-card-modal').classList.add('open');
+  const prints = await sfPrints(card.name);
+  pendingPrints = prints;
+  sel.innerHTML = prints.map(p=>`<option value="${p.id}" data-img="${cardImg(p)}" data-set="${p.set_name}" data-setcode="${p.set}">${p.set_name} (${p.set.toUpperCase()})</option>`).join('');
+  const cur = prints.find(p=>p.id===card.id);
+  sel.value = cur ? cur.id : (prints[0]?.id || '');
+}
+
+function onEditionChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const imgUrl = opt.getAttribute('data-img');
+  if (imgUrl) {
+    const img=document.getElementById('add-card-img'), ph=document.getElementById('add-img-ph');
+    img.style.display='none'; ph.style.display='flex'; ph.innerHTML='<span class="spinner"></span>';
+    img.onload=()=>{ph.style.display='none';img.style.display='block';}; img.src=imgUrl;
+    const p = pendingPrints.find(x=>x.id===sel.value);
+    if (p) { pendingCard.id=p.id; pendingCard.set=p.set_name; pendingCard.set_code=p.set; pendingCard.img=cardImg(p); pendingCard.rarity=p.rarity; }
+  }
+}
+
+function confirmAddCard() {
+  if (!pendingCard) return;
+  const qty       = parseInt(document.getElementById('modal-qty').value) || 1;
+  const condition = document.getElementById('modal-condition').value;
+  const foil      = document.getElementById('modal-foil').checked;
+  const lang      = document.getElementById('modal-lang').value;
+  const dest      = document.getElementById('modal-dest').value;
+  const selId     = document.getElementById('modal-edition-select').value;
+  const chosen    = pendingPrints.find(p=>p.id===selId) || pendingPrints[0];
+  const id        = chosen ? chosen.id : pendingCard.id;
+  const imgUrl    = chosen ? cardImg(chosen) : pendingCard.img;
+  const setCode   = chosen ? chosen.set : pendingCard.set_code;
+  const setName   = chosen ? chosen.set_name : pendingCard.set;
+  const rarity    = chosen ? chosen.rarity : pendingCard.rarity;
+  const entry     = { name:pendingCard.name, set:setName, set_code:setCode, colors:pendingCard.colors, type:pendingCard.type, rarity, img:imgUrl, qty, condition, foil, lang };
+
+  if (dest === 'collection' || dest === 'both') {
+    if (collection[id]) collection[id].qty += qty;
+    else collection[id] = {...entry};
+  }
+  if (dest === 'set' || dest === 'both') {
+    if (!sets[setCode]) {
+      sets[setCode] = { name:setName, total:0, code:setCode, owned:{} };
+      // recupera il totale reale in background
+      fetch(`https://api.scryfall.com/sets/${setCode}`)
+        .then(r=>r.json()).then(d=>{ if(d.card_count){ sets[setCode].total=d.card_count; saveLocal(); renderSets(); } })
+        .catch(()=>{});
+    }
+    if (!sets[setCode].owned) sets[setCode].owned = {};
+    if (sets[setCode].owned[id]) sets[setCode].owned[id].qty += qty;
+    else sets[setCode].owned[id] = {...entry};
+  }
+  saveAll(); closeModal('add-card-modal');
+  renderCollection(); renderSets();
+  const destLabel = dest==='both'?'Collezione + Set':dest==='set'?'Set':'Collezione';
+  showToast(`${pendingCard.name} → ${destLabel}`, 'ok');
+  pendingCard = null; pendingPrints = [];
+}
+
+// ═══════════════════════════════════════════════
+//  TAB 2 — COLLEZIONE
+// ═══════════════════════════════════════════════
+function renderCollection() {
+  const grid=document.getElementById('collection-grid'), empty=document.getElementById('collection-empty'), stats=document.getElementById('collection-stats');
+  let items = Object.entries(collection);
+  if (activeColorFilter !== 'all') {
+    if (activeColorFilter==='multi') items=items.filter(([,c])=>c.colors&&c.colors.length>1);
+    else items=items.filter(([,c])=>c.colors&&c.colors.length===1&&c.colors.includes(activeColorFilter));
+  }
+  const total = Object.values(collection).reduce((s,c)=>s+(c.qty||0),0);
+  stats.innerHTML = `<div class="stat"><strong>${Object.keys(collection).length}</strong> carte uniche</div><div class="stat"><strong>${total}</strong> copie totali</div>`;
+  if (!items.length) { grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML = items.map(([id,c]) => `
+    <div class="card" onclick="openEditModal('${id}')">
+      <div class="card-name">${c.name}</div>
+      <div class="card-set">${c.set||''}</div>
+      <div class="card-colors">${renderMana(c.colors||'')}</div>
+      <div class="card-meta">
+        <div class="qty-badge">${c.qty}</div>
+        ${c.foil?'<div class="foil-badge">Foil</div>':''}
+      </div>
+    </div>`).join('');
+}
+
+function setColorFilter(color, btn) {
+  activeColorFilter = color;
+  document.querySelectorAll('#color-filter .filter-chip').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  renderCollection();
+}
+
+// EDIT MODAL
+async function openEditModal(id) {
+  editCardId = id; editPrints = [];
+  const c = collection[id];
+  document.getElementById('edit-modal-title').textContent = c.name;
+  document.getElementById('edit-qty').value = c.qty||1;
+  document.getElementById('edit-condition').value = c.condition||'NM';
+  document.getElementById('edit-lang').value = c.lang||'en';
+  document.getElementById('edit-foil').checked = !!c.foil;
+  const img=document.getElementById('edit-card-img'), ph=document.getElementById('edit-img-ph');
+  img.style.display='none'; ph.style.display='flex'; ph.innerHTML='<span class="spinner"></span>';
+  if (c.img) { img.onload=()=>{ph.style.display='none';img.style.display='block';}; img.onerror=()=>{ph.innerHTML='🃏';}; img.src=c.img; }
+  else ph.innerHTML='🃏';
+  document.getElementById('edit-card-modal').classList.add('open');
+  const sel = document.getElementById('edit-edition-select');
+  sel.innerHTML='<option>Caricamento...</option>';
+  const prints = await sfPrints(c.name);
+  editPrints = prints;
+  sel.innerHTML = prints.map(p=>`<option value="${p.id}" data-img="${cardImg(p)}">${p.set_name} (${p.set.toUpperCase()})</option>`).join('');
+  sel.value = id;
+}
+function onEditEditionChange(sel) {
+  const imgUrl = sel.options[sel.selectedIndex].getAttribute('data-img');
+  if (!imgUrl) return;
+  const img=document.getElementById('edit-card-img'), ph=document.getElementById('edit-img-ph');
+  img.style.display='none'; ph.style.display='flex'; ph.innerHTML='<span class="spinner"></span>';
+  img.onload=()=>{ph.style.display='none';img.style.display='block';}; img.src=imgUrl;
+}
+function saveEditCard() {
+  if (!editCardId||!collection[editCardId]) return;
+  const selId = document.getElementById('edit-edition-select').value;
+  const chosen = editPrints.find(p=>p.id===selId);
+  const c = collection[editCardId];
+  c.qty = parseInt(document.getElementById('edit-qty').value)||1;
+  c.condition = document.getElementById('edit-condition').value;
+  c.lang = document.getElementById('edit-lang').value;
+  c.foil = document.getElementById('edit-foil').checked;
+  if (chosen && chosen.id !== editCardId) {
+    const imgUrl = cardImg(chosen);
+    collection[chosen.id] = {...c, set:chosen.set_name, set_code:chosen.set, img:imgUrl, rarity:chosen.rarity};
+    delete collection[editCardId];
+  } else { collection[editCardId] = c; }
+  saveAll(); renderCollection(); closeModal('edit-card-modal'); showToast('Carta aggiornata!','ok');
+}
+function removeCard() {
+  if (!editCardId) return;
+  const name = collection[editCardId]?.name||'';
+  delete collection[editCardId]; editCardId=null;
+  saveAll(); renderCollection(); closeModal('edit-card-modal'); showToast(`${name} rimossa`,'ok');
+}
+
+// ═══════════════════════════════════════════════
+//  TAB 3 — SET
+// ═══════════════════════════════════════════════
+async function searchSets() {
+  const q=document.getElementById('set-search-input').value.trim(); if(!q)return;
+  document.getElementById('set-search-spinner').style.display=''; document.getElementById('set-search-label').style.display='none';
+  const results = await sfSets(q);
+  document.getElementById('set-search-spinner').style.display='none'; document.getElementById('set-search-label').style.display='';
+  const box=document.getElementById('set-results-box');
+  if(!results.length){box.style.display='none';showToast('Nessun set trovato','err');return;}
+  box.style.display='block';
+  box.innerHTML=results.map(s=>`
+    <div class="search-result-item" onclick="addSet('${s.code}','${s.name.replace(/'/g,"\\'")}',${s.card_count||0})">
+      <div><div class="result-name">${s.name}</div><div class="result-set">${s.code.toUpperCase()} · ${s.card_count||'?'} carte · ${s.released_at||''}</div></div>
+      <button class="btn btn-sm" style="pointer-events:none">+ Aggiungi</button>
+    </div>`).join('');
+}
+
+function addSet(code, name, total) {
+  if (!sets[code]) sets[code] = { name, total, code, owned:{} };
+  else if (!sets[code].owned) sets[code].owned = {};
+  document.getElementById('set-results-box').style.display='none';
+  saveAll(); renderSets(); showToast(`${name} aggiunto!`,'ok');
+}
+
+function renderSets() {
+  const container=document.getElementById('sets-list'), empty=document.getElementById('sets-empty');
+  const entries=Object.entries(sets);
+  if(!entries.length){container.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  container.innerHTML=entries.map(([code,s])=>{
+    // possedute = in collezione generale OPPURE nell'inventario separato del set
+    const inColl = Object.values(collection).filter(c=>c.set_code===code).length;
+    const inSetOwned = Object.keys(s.owned||{}).length;
+    const owned = new Set([
+      ...Object.entries(collection).filter(([,c])=>c.set_code===code).map(([id])=>id),
+      ...Object.keys(s.owned||{})
+    ]).size;
+    const total=s.total||1, pct=Math.min(100,Math.round((owned/total)*100));
+    return`<div class="set-card" onclick="openSetDetail('${code}')">
+      <div class="set-header"><div class="set-name">${s.name}</div><button class="btn btn-danger btn-sm" onclick="removeSet('${code}',event)">✕</button></div>
+      <div style="font-size:.75rem;color:var(--text2);margin-bottom:8px">${owned}/${total} · ${pct}% · <span style="color:var(--green)">${inColl} in coll.</span> · <span style="color:var(--accent2)">${inSetOwned} solo set</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function removeSet(code, e) {
+  e.stopPropagation(); delete sets[code]; saveAll(); renderSets(); showToast('Set rimosso','ok');
+}
+
+async function openSetDetail(code) {
+  currentSet=code; setCardFilter='all'; setSort='number';
+  document.getElementById('set-sort-select').value='number';
+  document.getElementById('set-detail-name').textContent=sets[code].name;
+  document.getElementById('sets-list-view').style.display='none';
+  document.getElementById('set-detail-view').style.display='block';
+  document.getElementById('set-detail-content').innerHTML='';
+  document.getElementById('set-detail-stats').innerHTML='';
+  document.querySelectorAll('#set-filter-row .filter-chip').forEach((b,i)=>b.classList.toggle('active',i===0));
+  if (currentSetCards && currentSetCards._code===code) { renderSetDetail(); return; }
+  document.getElementById('set-detail-loading').style.display='block';
+  const cards = await sfSetCards(code);
+  document.getElementById('set-detail-loading').style.display='none';
+  currentSetCards = {_code:code, cards};
+  renderSetDetail();
+}
+
+function closeSetDetail() { currentSet=null; document.getElementById('sets-list-view').style.display='block'; document.getElementById('set-detail-view').style.display='none'; }
+function setSetFilter(f,btn) { setCardFilter=f; document.querySelectorAll('#set-filter-row .filter-chip').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderSetDetail(); }
+function setSetSort(v) { setSort=v; renderSetDetail(); }
+
+const RARITY_ORDER={common:0,uncommon:1,rare:2,mythic:3,special:4,bonus:5};
+function rarityLabel(r){return{common:'Comune',uncommon:'Non comune',rare:'Rara',mythic:'Mitica',special:'Speciale',bonus:'Bonus'}[r]||r||'—';}
+function rarityClass(r){return{common:'r-common',uncommon:'r-uncommon',rare:'r-rare',mythic:'r-mythic',special:'r-special'}[r]||'r-common';}
+function rarityLabelClass(r){return{common:'rl-common',uncommon:'rl-uncommon',rare:'rl-rare',mythic:'rl-mythic',special:'rl-special'}[r]||'rl-common';}
+
+function getOwnership(code) {
+  const collIds  = new Set(Object.entries(collection).filter(([,c])=>c.set_code===code).map(([id])=>id));
+  const collNames= new Set(Object.values(collection).filter(c=>c.set_code===code).map(c=>c.name.toLowerCase()));
+  const setIds   = new Set(Object.keys(sets[code]?.owned||{}));
+  const setNames = new Set(Object.values(sets[code]?.owned||{}).map(c=>c.name.toLowerCase()));
+  return {collIds,collNames,setIds,setNames};
+}
+
+function renderSetDetail() {
+  if (!currentSetCards) return;
+  const {cards} = currentSetCards, code=currentSet;
+  const {collIds,collNames,setIds,setNames} = getOwnership(code);
+
+  const isInColl = c => collIds.has(c.id)||collNames.has(c.name.toLowerCase());
+  const isInSet  = c => setIds.has(c.id)||setNames.has(c.name.toLowerCase());
+  const isOwned  = c => isInColl(c)||isInSet(c);
+
+  const total=cards.length, ownedCount=cards.filter(isOwned).length;
+  const missingCount=total-ownedCount, pct=total?Math.min(100,Math.round((ownedCount/total)*100)):0;
+  const setOnlyCount=cards.filter(c=>!isInColl(c)&&isInSet(c)).length;
+
+  document.getElementById('set-detail-sub').textContent=`${sets[code]?.name||''} · ${total} carte`;
+  document.getElementById('set-detail-stats').innerHTML=`
+    <div class="stat"><strong>${ownedCount}</strong> possedute</div>
+    <div class="stat"><strong style="color:var(--red)">${missingCount}</strong> mancanti</div>
+    <div class="stat"><strong>${pct}%</strong> completato</div>
+    <div class="stat"><strong style="color:var(--accent2)">${setOnlyCount}</strong> solo set</div>`;
+
+  let filtered=[...cards];
+  if (setCardFilter==='missing')  filtered=filtered.filter(c=>!isOwned(c));
+  else if (setCardFilter==='owned') filtered=filtered.filter(isOwned);
+  else if (setCardFilter==='setonly') filtered=filtered.filter(c=>!isInColl(c)&&isInSet(c));
+
+  if (setSort==='name') filtered.sort((a,b)=>a.name.localeCompare(b.name));
+  else if (setSort==='rarity') filtered.sort((a,b)=>(RARITY_ORDER[b.rarity]||0)-(RARITY_ORDER[a.rarity]||0)||a.name.localeCompare(b.name));
+  else filtered.sort((a,b)=>parseInt(a.collector_number||0)-parseInt(b.collector_number||0));
+
+  if (!filtered.length) {
+    document.getElementById('set-detail-content').innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><p>Nessuna carta per questo filtro.</p></div>`;
+    return;
+  }
+
+  const rows = filtered.map(c => {
+    const inC=isInColl(c), inS=isInSet(c), owned=inC||inS;
+    const collEntry = collection[c.id] || Object.values(collection).find(x=>x.set_code===code&&x.name.toLowerCase()===c.name.toLowerCase());
+    const setEntry  = sets[code]?.owned?.[c.id] || Object.values(sets[code]?.owned||{}).find(x=>x.name.toLowerCase()===c.name.toLowerCase());
+    let statusHtml;
+    if (inC)      statusHtml='<span class="owned-yes">✓ Coll.</span>';
+    else if (inS) statusHtml='<span class="set-owned-coll">◉ Set</span>';
+    else          statusHtml='<span class="owned-no">✗</span>';
+    const qty = collEntry?collEntry.qty:(setEntry?setEntry.qty:0);
+    // pulsante aggiungi-al-set
+    const btnLabel = inS ? '◉ Nel set' : '+ Set';
+    const btnClass = inS ? 'btn-add-set in-set' : 'btn-add-set';
+    const safeCard = JSON.stringify({id:c.id,name:c.name,set:c.set_name,set_code:c.set,
+      colors:(c.colors||c.color_identity||[]).join(''),rarity:c.rarity||'',img:cardImg(c)}).replace(/"/g,'&quot;');
+    return`<div class="set-cards-row">
+      <div class="set-col-num">${c.collector_number||'—'}</div>
+      <div>${c.name}</div>
+      <div class="set-col-rarity"><span class="rarity-dot ${rarityClass(c.rarity)}"></span><span class="rarity-label ${rarityLabelClass(c.rarity)}">${rarityLabel(c.rarity)}</span></div>
+      <div class="set-col-owned">${statusHtml}</div>
+      <div class="set-col-qty">${qty>0?qty+'x':'—'}</div>
+      <div><button class="${btnClass}" onclick="openSetAddModal(${safeCard})">${btnLabel}</button></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('set-detail-content').innerHTML=`
+    <div class="set-cards-table">
+      <div class="set-table-header">
+        <span onclick="setSetSort('number')" class="${setSort==='number'?'sort-active':''}"># ${setSort==='number'?'↑':''}</span>
+        <span onclick="setSetSort('name')"   class="${setSort==='name'?'sort-active':''}">Nome ${setSort==='name'?'↑':''}</span>
+        <span onclick="setSetSort('rarity')" class="${setSort==='rarity'?'sort-active':''}">Rarità ${setSort==='rarity'?'↑':''}</span>
+        <span style="text-align:center;cursor:default">Stato</span>
+        <span style="text-align:right;cursor:default">Qtà</span>
+        <span style="cursor:default">Azione</span>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+// QUICK ADD/EDIT TO SET from detail table
+function openSetAddModal(card) {
+  setAddCard = card;
+  const code = currentSet;
+  const nameKey = 'n_'+card.name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  const existing = sets[code]?.owned?.[nameKey]
+    || Object.values(sets[code]?.owned||{}).find(x=>x.name.toLowerCase()===card.name.toLowerCase());
+  const isEdit = !!existing;
+  document.getElementById('set-add-modal-title').textContent = isEdit
+    ? `Modifica nel set: ${sets[code]?.name||code}`
+    : `Aggiungi al set: ${sets[code]?.name||code}`;
+  document.getElementById('set-add-card-name').value = card.name;
+  document.getElementById('set-add-qty').value = isEdit ? existing.qty : 1;
+  document.getElementById('set-add-dest').value = 'set';
+  document.getElementById('set-add-confirm-btn').textContent = isEdit ? 'Salva' : 'Aggiungi';
+  document.getElementById('set-add-remove-btn').style.display = isEdit ? '' : 'none';
+  document.getElementById('set-add-modal').classList.add('open');
+}
+function confirmSetAdd() {
+  if (!setAddCard || !currentSet) return;
+  const qty  = parseInt(document.getElementById('set-add-qty').value)||1;
+  const dest = document.getElementById('set-add-dest').value;
+  const code = currentSet;
+  if (!sets[code].owned) sets[code].owned={};
+  // usa il nome come chiave per evitare duplicati tra edizioni diverse della stessa carta
+  const nameKey = 'n_'+setAddCard.name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  sets[code].owned[nameKey] = {...setAddCard, qty, _nameKey:true};
+  if (dest==='both') {
+    if (collection[setAddCard.id]) collection[setAddCard.id].qty += qty;
+    else collection[setAddCard.id] = {...setAddCard, qty, condition:'NM', foil:false, lang:'en'};
+  }
+  saveAll(); closeModal('set-add-modal');
+  renderSetDetail(); renderCollection(); renderSets();
+  showToast(`${setAddCard.name} salvata`,'ok');
+  setAddCard=null;
+}
+function removeSetCard() {
+  if (!setAddCard || !currentSet) return;
+  const code = currentSet;
+  const nameKey = 'n_'+setAddCard.name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  // rimuovi sia per nameKey che per ID (retrocompatibilità)
+  delete sets[code].owned[nameKey];
+  delete sets[code].owned[setAddCard.id];
+  saveAll(); closeModal('set-add-modal');
+  renderSetDetail(); renderCollection(); renderSets();
+  showToast(`${setAddCard.name} rimossa dal set`,'ok');
+  setAddCard=null;
+}
+
+// ═══════════════════════════════════════════════
+//  TAB 4 — MAZZI
+// ═══════════════════════════════════════════════
+function openNewDeckModal(){document.getElementById('deck-name-input').value='';document.getElementById('deck-notes-input').value='';document.getElementById('new-deck-modal').classList.add('open');}
+function confirmNewDeck(){
+  const name=document.getElementById('deck-name-input').value.trim(); if(!name){showToast('Inserisci un nome','err');return;}
+  const format=document.getElementById('deck-format-input').value, notes=document.getElementById('deck-notes-input').value.trim();
+  const id='deck_'+Date.now(); decks[id]={name,format,notes,cards:{}};
+  saveAll();renderDecks();closeModal('new-deck-modal');showToast(`Mazzo "${name}" creato!`,'ok');
+}
+function renderDecks(){
+  const container=document.getElementById('decks-list'),empty=document.getElementById('decks-empty');
+  const entries=Object.entries(decks);
+  if(!entries.length){container.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  container.innerHTML=entries.map(([id,d])=>{
+    const cardEntries=Object.entries(d.cards||{});
+    const totalQty=cardEntries.reduce((s,[,c])=>s+(c.qty||0),0);
+    // calcola mancanti per nome (come in renderDeckCards)
+    const missingCount=cardEntries.filter(([,c])=>{
+      const nameLow=c.name.toLowerCase();
+      const inColl=Object.values(collection).filter(x=>x.name.toLowerCase()===nameLow).reduce((s,x)=>s+(x.qty||0),0);
+      const inSet=Object.values(sets).reduce((tot,s)=>tot+Object.values(s.owned||{}).filter(x=>x.name.toLowerCase()===nameLow).reduce((s,x)=>s+(x.qty||0),0),0);
+      return Math.max(0,(c.qty||1)-Math.max(inColl,inSet))>0;
+    }).length;
+    return`<div class="deck-card" onclick="openDeckDetail('${id}')">
+      <div class="deck-header">
+        <div class="deck-name">${d.name}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="deck-format">${d.format}</div>
+          <button class="btn btn-danger btn-sm" onclick="deleteDeck('${id}',event)" title="Elimina mazzo">🗑</button>
+        </div>
+      </div>
+      ${d.notes?`<div style="font-size:.75rem;color:var(--text2);margin-top:4px">${d.notes}</div>`:''}
+      <div class="deck-stats">
+        <div class="deck-stat">${cardEntries.length} carte uniche</div>
+        <div class="deck-stat">·</div>
+        <div class="deck-stat">${totalQty} totali</div>
+        ${missingCount>0
+          ? `<div class="deck-stat">·</div><div class="deck-stat" style="color:var(--red)">⚠ ${missingCount} mancanti</div>`
+          : `<div class="deck-stat">·</div><div class="deck-stat" style="color:var(--green)">✓ Completo</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function deleteDeck(id, e) {
+  e.stopPropagation();
+  const name = decks[id]?.name||'';
+  if (!confirm(`Eliminare il mazzo "${name}"?`)) return;
+  delete decks[id];
+  saveAll(); renderDecks();
+  showToast(`Mazzo "${name}" eliminato`,'ok');
+}
+function openDeckDetail(id){
+  currentDeck=id; const d=decks[id];
+  document.getElementById('deck-detail-name').textContent=d.name;
+  document.getElementById('deck-detail-format').textContent=d.format+(d.notes?' · '+d.notes:'');
+  document.getElementById('decks-list-view').style.display='none';
+  document.getElementById('deck-detail-view').style.display='block';
+  renderDeckCards();
+}
+function closeDeckDetail(){currentDeck=null;document.getElementById('decks-list-view').style.display='block';document.getElementById('deck-detail-view').style.display='none';}
+async function searchDeckCard(){
+  const q=document.getElementById('deck-card-search').value.trim(); if(!q||!currentDeck)return;
+  const results=await sfSearch(q); const box=document.getElementById('deck-card-results');
+  if(!results.length){box.style.display='none';showToast('Nessuna carta trovata','err');return;}
+  box.style.display='block';
+  // raggruppa per nome: mostra una sola riga per carta indipendentemente dall'edizione
+  const byName={};
+  results.forEach(c=>{ if(!byName[c.name])byName[c.name]=c; });
+  box.innerHTML=Object.values(byName).slice(0,8).map(c=>{
+    const img=cardImg(c);
+    // usa nome come chiave stabile (non ID edizione)
+    const nameKey='card_'+c.name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase();
+    const safeArgs=`'${nameKey}','${c.name.replace(/'/g,"\\'")}','${(c.colors||c.color_identity||[]).join('')}','${img}','${c.rarity||''}'`;
+    return`<div class="search-result-item" onclick="addCardToDeck(${safeArgs})">
+      <div>
+        <div class="result-name">${c.name}</div>
+        <div class="result-set" style="color:var(--accent2);font-size:.68rem">Tutte le edizioni · ${c.type_line||''}</div>
+      </div>
+      <button class="btn btn-sm" style="pointer-events:none">+ Aggiungi</button>
+    </div>`;
+  }).join('');
+}
+function addCardToDeck(nameKey,name,colors,img,rarity){
+  if(!currentDeck)return;
+  const deck=decks[currentDeck];
+  if(!deck.cards[nameKey])deck.cards[nameKey]={name,colors,img,rarity,qty:0,set:'Tutte le edizioni'};
+  deck.cards[nameKey].qty=(deck.cards[nameKey].qty||0)+1;
+  document.getElementById('deck-card-results').style.display='none';
+  saveAll();renderDeckCards();showToast(`${name} aggiunta al mazzo`,'ok');
+}
+function renderDeckCards(){
+  const deck=decks[currentDeck],container=document.getElementById('deck-cards-container');
+  const entries=Object.entries(deck.cards||{});
+  if(!entries.length){container.innerHTML='<div class="empty"><div class="empty-icon">⚔️</div><p>Nessuna carta.</p></div>';return;}
+  const totalQty=entries.reduce((s,[,c])=>s+(c.qty||0),0);
+
+  // Per ogni carta: cerca per NOME in collezione e in tutti i set (qualsiasi edizione)
+  const enriched=entries.map(([id,c])=>{
+    const nameLow=c.name.toLowerCase();
+
+    // tutte le copie in collezione con quel nome
+    const inCollQty = Object.values(collection)
+      .filter(x=>x.name&&x.name.toLowerCase()===nameLow)
+      .reduce((s,x)=>s+(x.qty||0),0);
+
+    // tutte le copie in qualsiasi set tracciato con quel nome
+    let inSetQty=0, inSetNames=[];
+    for (const [,s] of Object.entries(sets)) {
+      const tot=Object.values(s.owned||{})
+        .filter(x=>x.name&&x.name.toLowerCase()===nameLow)
+        .reduce((s,x)=>s+(x.qty||0),0);
+      if(tot>0){ inSetQty+=tot; inSetNames.push(s.name); }
+    }
+
+    // somma: collezione e set sono inventari fisicamente separati
+    const realAvail = inCollQty + inSetQty;
+    const miss = Math.max(0,(c.qty||1)-realAvail);
+    return {id,c,inCollQty,inSetQty,inSetNames,miss};
+  });
+
+  const missingArr=enriched.filter(e=>e.miss>0);
+  const fromCollOnly=enriched.filter(e=>e.inCollQty>0&&e.inSetQty===0).length;
+  const fromSetOnly =enriched.filter(e=>e.inCollQty===0&&e.inSetQty>0).length;
+
+  container.innerHTML=`
+    <div class="stats-bar" style="margin-top:1rem">
+      <div class="stat"><strong>${entries.length}</strong> uniche</div>
+      <div class="stat"><strong>${totalQty}</strong> totali</div>
+      <div class="stat"><strong style="color:var(--green)">${fromCollOnly}</strong> da coll.</div>
+      <div class="stat"><strong style="color:var(--accent2)">${fromSetOnly}</strong> da set</div>
+      <div class="stat"><strong style="color:var(--red)">${missingArr.length}</strong> mancanti</div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.7rem;color:var(--text2);margin-bottom:.7rem">
+      <span><span style="color:var(--green)">●</span> In collezione</span>
+      <span><span style="color:var(--accent2)">●</span> Solo in set</span>
+      <span><span style="color:var(--gold)">●</span> In entrambi</span>
+      <span><span style="color:var(--red)">●</span> Mancante</span>
+    </div>
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+      ${enriched.map(({id,c,inCollQty,inSetQty,inSetNames,miss})=>{
+        let srcHtml, dotColor;
+        if (miss > 0) {
+          dotColor='var(--red)';
+          const avail=inCollQty+inSetQty;
+          srcHtml=`<span class="deck-card-missing">−${miss} mancanti${avail>0?` (hai ${avail}/${c.qty||1})`:''}</span>`;
+        } else if (inCollQty>0 && inSetQty>0) {
+          dotColor='var(--gold)';
+          srcHtml=`<span style="font-size:.68rem;color:var(--gold)">✓ Coll. (${inCollQty}x) + Set (${inSetQty}x)</span>`;
+        } else if (inCollQty>0) {
+          dotColor='var(--green)';
+          srcHtml=`<span class="deck-card-owned">✓ Collezione (${inCollQty}x)</span>`;
+        } else {
+          dotColor='var(--accent2)';
+          const setLabel=inSetNames.length>1?`${inSetNames.length} set`:inSetNames[0]||'—';
+          srcHtml=`<span style="font-size:.68rem;color:var(--accent2)">◉ Set: ${setLabel} (${inSetQty}x)</span>`;
+        }
+        return`<div class="deck-card-item">
+          <div style="display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0">
+            <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};margin-top:5px;flex-shrink:0"></div>
+            <div style="min-width:0">
+              <div class="deck-card-name">${c.qty}x ${c.name}</div>
+              <div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap">
+                <span style="font-size:.68rem;color:var(--text2)">${c.set||'Tutte le edizioni'}</span>
+                ${c.rarity?`<span class="rarity-dot ${rarityClass(c.rarity)}" style="width:6px;height:6px"></span><span class="rarity-label ${rarityLabelClass(c.rarity)}" style="font-size:.63rem">${rarityLabel(c.rarity)}</span>`:''}
+              </div>
+              <div style="margin-top:3px">${srcHtml}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-shrink:0;margin-left:8px">
+            <button class="btn btn-danger btn-sm" onclick="removeCardFromDeck('${id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function removeCardFromDeck(cardId){if(!currentDeck)return;delete decks[currentDeck].cards[cardId];saveAll();renderDeckCards();showToast('Carta rimossa','ok');}
+
+// ═══════════════════════════════════════════════
+//  EXPORT — SET
+// ═══════════════════════════════════════════════
+function exportSet(format) {
+  if (!currentSetCards||!currentSet) return;
+  const {cards}=currentSetCards, code=currentSet, setName=sets[code]?.name||code;
+  const {collIds,collNames,setIds,setNames}=getOwnership(code);
+  const isInColl=c=>collIds.has(c.id)||collNames.has(c.name.toLowerCase());
+  const isInSet=c=>setIds.has(c.id)||setNames.has(c.name.toLowerCase());
+  const isOwned=c=>isInColl(c)||isInSet(c);
+  let filtered=[...cards];
+  if(setCardFilter==='missing') filtered=filtered.filter(c=>!isOwned(c));
+  else if(setCardFilter==='owned') filtered=filtered.filter(isOwned);
+  else if(setCardFilter==='setonly') filtered=filtered.filter(c=>!isInColl(c)&&isInSet(c));
+  if(setSort==='name') filtered.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(setSort==='rarity') filtered.sort((a,b)=>(RARITY_ORDER[b.rarity]||0)-(RARITY_ORDER[a.rarity]||0)||a.name.localeCompare(b.name));
+  else filtered.sort((a,b)=>parseInt(a.collector_number||0)-parseInt(b.collector_number||0));
+  const total=cards.length, owned=cards.filter(isOwned).length;
+  const filterLabel={all:'Tutte',missing:'Mancanti',owned:'Possedute',setonly:'Solo Set'}[setCardFilter]||'Tutte';
+  if(format==='txt'){
+    let t=`MAGIC VAULT — ${setName}\nData: ${new Date().toLocaleDateString('it-IT')} | Filtro: ${filterLabel}\nTotale: ${total} | Possedute: ${owned} | Mancanti: ${total-owned}\n${'─'.repeat(72)}\n`;
+    t+=`#    Nome                                 Rarità         Stato        Qtà\n${'─'.repeat(72)}\n`;
+    filtered.forEach(c=>{
+      const inC=isInColl(c),inS=isInSet(c);
+      const st=inC?'Coll.':inS?'Solo Set':'Mancante';
+      const collE=collection[c.id]||Object.values(collection).find(x=>x.set_code===code&&x.name.toLowerCase()===c.name.toLowerCase());
+      const setE=sets[code]?.owned?.[c.id];
+      const qty=(collE?.qty||setE?.qty||0);
+      t+=`${(c.collector_number||'—').padEnd(4)} ${c.name.substring(0,36).padEnd(37)} ${rarityLabel(c.rarity).substring(0,14).padEnd(15)} ${st.padEnd(12)} ${qty>0?qty+'x':'—'}\n`;
+    });
+    downloadText(t,`${setName.replace(/\s+/g,'_')}_set.txt`);
+  } else {
+    const rows=filtered.map(c=>{
+      const inC=isInColl(c),inS=isInSet(c);
+      const stHtml=inC?`<span style="color:#2a7a3a">✓ Coll.</span>`:inS?`<span style="color:#5050c0">◉ Set</span>`:`<span style="color:#c03020">✗</span>`;
+      const collE=collection[c.id]; const setE=sets[code]?.owned?.[c.id];
+      const qty=collE?.qty||setE?.qty||0;
+      return`<tr><td>${c.collector_number||'—'}</td><td>${c.name}</td><td>${rarityLabel(c.rarity)}</td><td style="text-align:center">${stHtml}</td><td style="text-align:right">${qty>0?qty+'x':'—'}</td></tr>`;
+    }).join('');
+    printContent(`<h2>${setName}</h2>
+<p style="font-size:11px;color:#666">Data: ${new Date().toLocaleDateString('it-IT')} · Filtro: ${filterLabel} · Totale: ${total} · Possedute: ${owned} · Mancanti: ${total-owned}</p>
+<table border="1" cellpadding="4" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:11px">
+<thead style="background:#f0f0f0"><tr><th>#</th><th>Carta</th><th>Rarità</th><th>Stato</th><th>Qtà</th></tr></thead>
+<tbody>${rows}</tbody></table>`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORT — DECK
+// ═══════════════════════════════════════════════
+function exportDeck(format) {
+  if (!currentDeck) return;
+  const deck=decks[currentDeck], entries=Object.entries(deck.cards||{});
+  const deckName=deck.name, totalQty=entries.reduce((s,[,c])=>s+(c.qty||0),0);
+  const missingE=entries.filter(([id,c])=>Math.max(0,(c.qty||1)-(collection[id]?.qty||0))>0);
+  if(format==='txt'){
+    let t=`MAGIC VAULT — Mazzo: ${deckName}\nFormato: ${deck.format} | Data: ${new Date().toLocaleDateString('it-IT')}\n`;
+    if(deck.notes)t+=`Note: ${deck.notes}\n`;
+    t+=`Carte: ${totalQty} | Da acquistare: ${missingE.length}\n${'─'.repeat(65)}\nLISTA COMPLETA\n${'─'.repeat(65)}\n`;
+    entries.forEach(([id,c])=>{const miss=Math.max(0,(c.qty||1)-(collection[id]?.qty||0));t+=`${c.qty}x ${c.name.padEnd(36)} ${rarityLabel(c.rarity).padEnd(12)} ${miss>0?`[MANCA ${miss}]`:'[OK]'}\n`;});
+    if(missingE.length){t+=`\n${'─'.repeat(65)}\nDA ACQUISTARE\n${'─'.repeat(65)}\n`;missingE.forEach(([id,c])=>{const miss=Math.max(0,(c.qty||1)-(collection[id]?.qty||0));t+=`${miss}x ${c.name}\n`;});}
+    downloadText(t,`${deckName.replace(/\s+/g,'_')}_mazzo.txt`);
+  } else {
+    const allRows=entries.map(([id,c])=>{const inColl=collection[id]?.qty||0,miss=Math.max(0,(c.qty||1)-inColl);return`<tr><td>${c.qty}x</td><td>${c.name}</td><td>${rarityLabel(c.rarity)}</td><td>${inColl}</td><td style="color:${miss>0?'#c03020':'#2a7a3a'}">${miss>0?'−'+miss:'✓'}</td></tr>`;}).join('');
+    const missingRows=missingE.map(([id,c])=>{const miss=Math.max(0,(c.qty||1)-(collection[id]?.qty||0));return`<tr><td>${miss}x</td><td>${c.name}</td><td>${rarityLabel(c.rarity)}</td><td>${c.set}</td></tr>`;}).join('');
+    printContent(`<h2>Mazzo: ${deckName}</h2>
+<p style="font-size:11px;color:#666">Formato: ${deck.format} · Data: ${new Date().toLocaleDateString('it-IT')} · Carte: ${totalQty} · Da acquistare: ${missingE.length}</p>
+${deck.notes?`<p style="font-size:11px;font-style:italic">Note: ${deck.notes}</p>`:''}
+<h3 style="font-size:13px;margin-top:14px">Lista completa</h3>
+<table border="1" cellpadding="4" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:11px">
+<thead style="background:#f0f0f0"><tr><th>Qtà</th><th>Carta</th><th>Rarità</th><th>In coll.</th><th>Mancanti</th></tr></thead>
+<tbody>${allRows}</tbody></table>
+${missingE.length?`<h3 style="font-size:13px;margin-top:16px;color:#c03020">Da acquistare (${missingE.length})</h3>
+<table border="1" cellpadding="4" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:11px">
+<thead style="background:#ffe0e0"><tr><th>Qtà</th><th>Carta</th><th>Rarità</th><th>Set</th></tr></thead>
+<tbody>${missingRows}</tbody></table>`:`<p style="color:#2a7a3a;margin-top:14px">✓ Hai tutte le carte!</p>`}`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function downloadText(content, filename) {
+  const a=document.createElement('a'); a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(content); a.download=filename; a.click();
+}
+function printContent(html) {
+  const w=window.open('','_blank','width=820,height=720');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Magic Vault</title>
+<style>body{font-family:Arial,sans-serif;padding:20px;color:#000}h2{font-size:17px}h3{font-size:13px}@media print{button{display:none}}</style>
+</head><body>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+  <span style="font-size:10px;color:#999">Magic Vault</span>
+  <button onclick="window.print()" style="padding:6px 14px;cursor:pointer;background:#7b4fc9;color:#fff;border:none;border-radius:4px;font-size:12px">🖨 Stampa / Salva PDF</button>
+</div>${html}</body></html>`);
+  w.document.close(); setTimeout(()=>w.focus(),300);
+}
+function renderMana(colors) {
+  return (colors||'').split('').filter(c=>'WUBRG'.includes(c)).map(c=>`<div class="mana mana-${c}">${c}</div>`).join('')||`<div class="mana mana-C">◆</div>`;
+}
+function showSection(id,btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active'); btn.classList.add('active');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+let _tt;
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+(type||'');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
