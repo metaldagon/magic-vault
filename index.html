@@ -779,16 +779,55 @@ function loadGoogleLibs() {
           gapi.client.setToken({ access_token: driveToken });
           driveConnected = true;
           setDriveStatus(true);
-          showToast('Google Drive connesso! ✓', 'ok');
-          // salva immediatamente i dati locali su Drive
-          saveToDrive('collection.json', collection);
-          saveToDrive('sets.json', sets);
-          saveToDrive('decks.json', decks);
+          showToast('Drive connesso, caricamento dati...', '');
+          // carica prima i dati da Drive (sincronizzazione)
+          loadFromDrive();
         },
       });
       gisLoaded = true;
     };
     document.head.appendChild(s);
+  }
+}
+
+async function loadFromDrive() {
+  try {
+    const folderId = await getOrCreateFolder('MagicVault');
+    let changed = false;
+    // scarica ogni file se esiste su Drive
+    for (const [filename, setter] of [
+      ['collection.json', d => { collection = d; }],
+      ['sets.json',       d => { sets = d; }],
+      ['decks.json',      d => { decks = d; }],
+    ]) {
+      const fileId = await findDriveFile(filename, folderId);
+      if (fileId) {
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+          headers: { Authorization: 'Bearer ' + driveToken }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setter(data);
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      saveLocal(); // aggiorna localStorage col dato di Drive
+      renderCollection();
+      renderSets();
+      renderDecks();
+      showToast('Dati sincronizzati da Drive ✓', 'ok');
+    } else {
+      // nessun dato su Drive: carica i dati locali su Drive
+      showToast('Drive connesso — primo salvataggio...', 'ok');
+      saveToDrive('collection.json', collection);
+      saveToDrive('sets.json', sets);
+      saveToDrive('decks.json', decks);
+    }
+  } catch(e) {
+    console.warn('loadFromDrive error', e);
+    showToast('Drive connesso (errore caricamento dati)', 'err');
   }
 }
 
