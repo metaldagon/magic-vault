@@ -1208,21 +1208,31 @@ function rarityClass(r){return{common:'r-common',uncommon:'r-uncommon',rare:'r-r
 function rarityLabelClass(r){return{common:'rl-common',uncommon:'rl-uncommon',rare:'rl-rare',mythic:'rl-mythic',special:'rl-special'}[r]||'rl-common';}
 
 function getOwnership(code) {
-  const collIds  = new Set(Object.entries(collection).filter(([,c])=>c.set_code===code).map(([id])=>id));
-  const collNames= new Set(Object.values(collection).filter(c=>c.set_code===code).map(c=>c.name.toLowerCase()));
-  const setIds   = new Set(Object.keys(sets[code]?.owned||{}));
-  const setNames = new Set(Object.values(sets[code]?.owned||{}).map(c=>c.name.toLowerCase()));
-  return {collIds,collNames,setIds,setNames};
+  const owned = sets[code]?.owned || {};
+  // costruisce set di ID posseduti nel set — sia per ID Scryfall che per nameKey
+  const collIds   = new Set(Object.entries(collection).filter(([,c])=>c.set_code===code).map(([id])=>id));
+  const collNames = new Set(Object.values(collection).filter(c=>c.set_code===code).map(c=>c.name.toLowerCase()));
+  // per il set: ID diretti + nameKey (n_nome_carta)
+  const setOwnedIds   = new Set(Object.keys(owned));
+  const setOwnedNames = new Set(Object.values(owned).map(c=>c.name.toLowerCase()));
+  return {collIds, collNames, setOwnedIds, setOwnedNames, owned};
 }
 
 function renderSetDetail() {
   if (!currentSetCards) return;
   const {cards} = currentSetCards, code=currentSet;
-  const {collIds,collNames,setIds,setNames} = getOwnership(code);
+  const {collIds, collNames, setOwnedIds, setOwnedNames, owned} = getOwnership(code);
 
-  const isInColl = c => collIds.has(c.id)||collNames.has(c.name.toLowerCase());
-  const isInSet  = c => setIds.has(c.id)||setNames.has(c.name.toLowerCase());
-  const isOwned  = c => isInColl(c)||isInSet(c);
+  // Una carta è in collezione se il suo ID è in collezione OPPURE il suo nome (stesso set)
+  const isInColl = c => collIds.has(c.id) || collNames.has(c.name.toLowerCase());
+
+  // Una carta è nel set solo se:
+  // 1) il suo ID esatto è nell'inventario, OPPURE
+  // 2) la nameKey corrispondente è nell'inventario
+  // NON per nome generico — così le varianti illustrazione sono indipendenti
+  const nameKey  = c => 'n_'+c.name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  const isInSet  = c => setOwnedIds.has(c.id) || setOwnedIds.has(nameKey(c));
+  const isOwned  = c => isInColl(c) || isInSet(c);
 
   const total=cards.length, ownedCount=cards.filter(isOwned).length;
   const missingCount=total-ownedCount, pct=total?Math.min(100,Math.round((ownedCount/total)*100)):0;
@@ -1236,7 +1246,7 @@ function renderSetDetail() {
     <div class="stat"><strong style="color:var(--accent2)">${setOnlyCount}</strong> solo set</div>`;
 
   let filtered=[...cards];
-  if (setCardFilter==='missing')  filtered=filtered.filter(c=>!isOwned(c));
+  if (setCardFilter==='missing')    filtered=filtered.filter(c=>!isOwned(c));
   else if (setCardFilter==='owned') filtered=filtered.filter(isOwned);
   else if (setCardFilter==='setonly') filtered=filtered.filter(c=>!isInColl(c)&&isInSet(c));
 
@@ -1250,16 +1260,15 @@ function renderSetDetail() {
   }
 
   const rows = filtered.map(c => {
-    const inC=isInColl(c), inS=isInSet(c), owned=inC||inS;
+    const inC=isInColl(c), inS=isInSet(c);
     const collEntry = collection[c.id] || Object.values(collection).find(x=>x.set_code===code&&x.name.toLowerCase()===c.name.toLowerCase());
-    const setEntry  = sets[code]?.owned?.[c.id] || Object.values(sets[code]?.owned||{}).find(x=>x.name.toLowerCase()===c.name.toLowerCase());
+    const setEntry  = owned[c.id] || owned[nameKey(c)];
     let statusHtml;
     if (inC)      statusHtml='<span class="owned-yes">✓ Coll.</span>';
     else if (inS) statusHtml='<span class="set-owned-coll">◉ Set</span>';
     else          statusHtml='<span class="owned-no">✗</span>';
-    const qty = collEntry?collEntry.qty:(setEntry?setEntry.qty:0);
-    // pulsante aggiungi-al-set
-    const btnLabel = inS ? '◉ Nel set' : '+ Set';
+    const qty = collEntry?.qty || setEntry?.qty || 0;
+    const btnLabel = inS ? '✏️ Modifica' : '+ Set';
     const btnClass = inS ? 'btn-add-set in-set' : 'btn-add-set';
     const safeCard = JSON.stringify({id:c.id,name:c.name,set:c.set_name,set_code:c.set,
       colors:(c.colors||c.color_identity||[]).join(''),rarity:c.rarity||'',img:cardImg(c)}).replace(/"/g,'&quot;');
@@ -1521,9 +1530,10 @@ function removeCardFromDeck(cardId){if(!currentDeck)return;delete decks[currentD
 function exportSet(format) {
   if (!currentSetCards||!currentSet) return;
   const {cards}=currentSetCards, code=currentSet, setName=sets[code]?.name||code;
-  const {collIds,collNames,setIds,setNames}=getOwnership(code);
+  const {collIds,collNames,setOwnedIds,owned}=getOwnership(code);
+  const nk=c=>'n_'+c.name.toLowerCase().replace(/[^a-z0-9]/g,'_');
   const isInColl=c=>collIds.has(c.id)||collNames.has(c.name.toLowerCase());
-  const isInSet=c=>setIds.has(c.id)||setNames.has(c.name.toLowerCase());
+  const isInSet=c=>setOwnedIds.has(c.id)||setOwnedIds.has(nk(c));
   const isOwned=c=>isInColl(c)||isInSet(c);
   let filtered=[...cards];
   if(setCardFilter==='missing') filtered=filtered.filter(c=>!isOwned(c));
@@ -1532,16 +1542,16 @@ function exportSet(format) {
   if(setSort==='name') filtered.sort((a,b)=>a.name.localeCompare(b.name));
   else if(setSort==='rarity') filtered.sort((a,b)=>(RARITY_ORDER[b.rarity]||0)-(RARITY_ORDER[a.rarity]||0)||a.name.localeCompare(b.name));
   else filtered.sort((a,b)=>parseInt(a.collector_number||0)-parseInt(b.collector_number||0));
-  const total=cards.length, owned=cards.filter(isOwned).length;
+  const total=cards.length, ownedCount=cards.filter(isOwned).length;
   const filterLabel={all:'Tutte',missing:'Mancanti',owned:'Possedute',setonly:'Solo Set'}[setCardFilter]||'Tutte';
   if(format==='txt'){
-    let t=`MAGIC VAULT — ${setName}\nData: ${new Date().toLocaleDateString('it-IT')} | Filtro: ${filterLabel}\nTotale: ${total} | Possedute: ${owned} | Mancanti: ${total-owned}\n${'─'.repeat(72)}\n`;
+    let t=`MAGIC VAULT — ${setName}\nData: ${new Date().toLocaleDateString('it-IT')} | Filtro: ${filterLabel}\nTotale: ${total} | Possedute: ${ownedCount} | Mancanti: ${total-ownedCount}\n${'─'.repeat(72)}\n`;
     t+=`#    Nome                                 Rarità         Stato        Qtà\n${'─'.repeat(72)}\n`;
     filtered.forEach(c=>{
       const inC=isInColl(c),inS=isInSet(c);
       const st=inC?'Coll.':inS?'Solo Set':'Mancante';
       const collE=collection[c.id]||Object.values(collection).find(x=>x.set_code===code&&x.name.toLowerCase()===c.name.toLowerCase());
-      const setE=sets[code]?.owned?.[c.id];
+      const setE=owned[c.id]||owned[nk(c)];
       const qty=(collE?.qty||setE?.qty||0);
       t+=`${(c.collector_number||'—').padEnd(4)} ${c.name.substring(0,36).padEnd(37)} ${rarityLabel(c.rarity).substring(0,14).padEnd(15)} ${st.padEnd(12)} ${qty>0?qty+'x':'—'}\n`;
     });
